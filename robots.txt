@@ -1,0 +1,3 @@
+User-agent: *
+Disallow:
+Sitemap: https://yupines.github.io/sitemap.xml
