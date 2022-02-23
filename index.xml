@@ -16,25 +16,23 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://yupines.github.io/me/</guid>
-      <description>I am a MS student in Shanghai jiaotong University, majoring in immunology. My research focuses on using bioinformactics tools to decipher heterogenous immune microenvironment. Besides, I&amp;rsquo;m intrested in machine learning in augmenting omics-data integration and extensive applications in immune biology. Here, I hope to blog my learning experience and share with everyone！🙋</description>
+      <description>I am a M.S. student in Shanghai jiaotong University. And my major is immunology. In Mid-2020, I transferred to dedicated bioinformatic analysis. My researches focus on profiling multi-omics data to decipher heterogenous immune microenvironment. Besides, I&#39;m intrested in machine learning in augmenting omics-data integration and their extensive applications in immune biology. Here, I wanna blog my learning experience and share with everyone！🙋 
+Latest
+uniPort: a unified computational framework for single-cell data integration with optimal transport https://www.</description>
     </item>
     
     <item>
-      <title>note1</title>
-      <link>https://yupines.github.io/post/p1/</link>
+      <title>Variational Auto-Encoder</title>
+      <link>https://yupines.github.io/post/vae/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://yupines.github.io/post/p1/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>note2</title>
-      <link>https://yupines.github.io/post/p2/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://yupines.github.io/post/p2/</guid>
-      <description>111111111111111111111111\n 11111111111</description>
+      <guid>https://yupines.github.io/post/vae/</guid>
+      <description>经过一段时间东拼西凑的学习，小白终于能理解变分自编码器了哈哈哈，感谢各路大神的教程！在这里整理一些简短的笔记。
+一、VAE的初步理解  1. 给定真实样本$X_k$,假设存在专属于$X_k$的后验分布$p(Z|X_k)$,并假定这个分布是正态多元的，专属的目的是训练生成器$X = g(Z)$,从分布$p(Z|X_k)$采样出一个$Z_k$并还原为$\hat{X_k}$。
+2. 使用神经网络拟合正态分布的参数：均值$\mu$和方差${\sigma}^2$。于是构建两个神经网络：${\mu}k = {f}_1(X_k)$和${\log}{\sigma}_k^2 = {f}_2(X_k)$ （不需要激活函数的处理）。
+3. 重构X的过程需最小化$(\hat{X_k},X_k)$的距离，重构噪声（即方差）既要尽可能地小（减少重构误差），同时又要防止退化为0（保证模型具有生成能力），那么可以让所有样本的$p(Z|X_k)$向标准正态分布看齐。若接近正态分布$N(0,I)$，则： $$p(Z) = \sum\limits_{X}p(Z|X)p(X) = \sum N(0,I)p(X) = N(0,I)$$ $p(Z)$满足正态分布。接下来利用KL散度来计算loss，即$KL(N(\mu,{\sigma}^2)||N(0,I))$，计算结果为：
+$$\mathcal{L}_{\mu,{\sigma}^2} = \frac{1}{2}\sum\limits_{i=1}^d({\mu}_{(i)}^2 + {\sigma}^2_{(i)}-{\log}{\sigma}^2_{(i)}-1) $$ 其中$d$是因变量$Z$的维度。
+ 4. 重参数技巧：从正态分布中采样 $\varepsilon$，然后$Z = \mu + \varepsilon * \sigma$  二、VAE的目标函数  （一）背景知识  1.边缘分布  假设$p(x,y)$,其中一个特定变量的边缘分布为： $$p(x) = \sum\limits_{y}p(x,y) = \sum\limits_{y}p(x|y)p(y)$$  2.交叉熵和KL散度  交叉熵和KL关系密切，可以用来衡量两个分布的差异，以离散变量$x$为例： $$H(P,Q)=-\mathbb{E}_{x\sim P}\ {\log}Q(x) = -\sum\limits_{i=1}^N P(x_i){\log}Q(x_i)$$ $KL$散度定义，对$P,Q$分布有： $$D_{KL}(P||Q) = \mathbb{E}_{x\sim P}[{\log}\frac{P(x)}{Q(x)}] = \mathbb{E}_{x\sim P}[{\log}P(x) - {\log}Q(x)] $$ 对于离散型变量有： $$D_{KL}(P||Q) = \sum\limits_{i=1}^N P(x_i)\ {\log}(\frac{P(x_i)}{Q(x_i)}) = \sum\limits_{i=1}^N P(x_i)\ [{\log}P(x_i)-{\log}Q(x_i)] $$ 对于连续型变量，其概率密度函数（probability density function，PDF）用小写字母$p(x)$和$q(x)$来表示，离散型随机变量的概率质量函数（probability mass function，PMF）用大写字母表示。</description>
     </item>
     
   </channel>

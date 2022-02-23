@@ -81,7 +81,65 @@
     }
   ]
 }
+</script><script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
 </script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script type="text/javascript">
+function (selector) {
+  return Array.prototype.slice.call(document.querySelectorAll(selector), 0);
+}
+
+function replace_code_to_span(node) {
+  is_inline_math = /^$(.)$$/.exec(node.textContent);
+  is_display_math = /^$$(.)$$$/ms.exec(node.textContent) ||
+          /^\begin{.+}(.*)\end{.+}/ms.exec(node.textContent);
+  if (is_inline_math || is_display_math) {
+    var parent = node.parentNode;
+    var replacement = document.createElement('span');
+    if (is_display_math) {
+      replacement.class = "yuuki_mathjax_inline"
+    } else {
+      replacement.class = "yuuki_mathjax_display"
+    }
+    replacement.textContent = node.textContent;
+    parent.replaceChild(replacement, node);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yuuki_query_all_nodes_as_array("code").map(replace_code_to_span);
+});
+</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['\\(','\\)']]},
+  displayMath: [['$$','$$'], ['\\[','\\]']]
+});
+</script>
+
+
+
 </head>
 
 <body class="list" id="top">
@@ -147,6 +205,7 @@
         </ul>
     </nav>
 </header>
+
 <main class="main"> 
 <header class="page-header"><div class="breadcrumbs"><a href="https://yupines.github.io/">Home</a></div>
   <h1>Posts</h1>
@@ -154,26 +213,19 @@
 
 <article class="post-entry"> 
   <header class="entry-header">
-    <h2>note1
+    <h2>Variational Auto-Encoder
     </h2>
   </header>
   <section class="entry-content">
-    <p></p>
+    <p>经过一段时间东拼西凑的学习，小白终于能理解变分自编码器了哈哈哈，感谢各路大神的教程！在这里整理一些简短的笔记。
+一、VAE的初步理解  1. 给定真实样本$X_k$,假设存在专属于$X_k$的后验分布$p(Z|X_k)$,并假定这个分布是正态多元的，专属的目的是训练生成器$X = g(Z)$,从分布$p(Z|X_k)$采样出一个$Z_k$并还原为$\hat{X_k}$。
+2. 使用神经网络拟合正态分布的参数：均值$\mu$和方差${\sigma}^2$。于是构建两个神经网络：${\mu}k = {f}_1(X_k)$和${\log}{\sigma}_k^2 = {f}_2(X_k)$ （不需要激活函数的处理）。
+3. 重构X的过程需最小化$(\hat{X_k},X_k)$的距离，重构噪声（即方差）既要尽可能地小（减少重构误差），同时又要防止退化为0（保证模型具有生成能力），那么可以让所有样本的$p(Z|X_k)$向标准正态分布看齐。若接近正态分布$N(0,I)$，则： $$p(Z) = \sum\limits_{X}p(Z|X)p(X) = \sum N(0,I)p(X) = N(0,I)$$ $p(Z)$满足正态分布。接下来利用KL散度来计算loss，即$KL(N(\mu,{\sigma}^2)||N(0,I))$，计算结果为：
+$$\mathcal{L}_{\mu,{\sigma}^2} = \frac{1}{2}\sum\limits_{i=1}^d({\mu}_{(i)}^2 &#43; {\sigma}^2_{(i)}-{\log}{\sigma}^2_{(i)}-1) $$ 其中$d$是因变量$Z$的维度。
+ 4. 重参数技巧：从正态分布中采样 $\varepsilon$，然后$Z = \mu &#43; \varepsilon * \sigma$  二、VAE的目标函数  （一）背景知识  1.边缘分布  假设$p(x,y)$,其中一个特定变量的边缘分布为： $$p(x) = \sum\limits_{y}p(x,y) = \sum\limits_{y}p(x|y)p(y)$$  2.交叉熵和KL散度  交叉熵和KL关系密切，可以用来衡量两个分布的差异，以离散变量$x$为例： $$H(P,Q)=-\mathbb{E}_{x\sim P}\ {\log}Q(x) = -\sum\limits_{i=1}^N P(x_i){\log}Q(x_i)$$ $KL$散度定义，对$P,Q$分布有： $$D_{KL}(P||Q) = \mathbb{E}_{x\sim P}[{\log}\frac{P(x)}{Q(x)}] = \mathbb{E}_{x\sim P}[{\log}P(x) - {\log}Q(x)] $$ 对于离散型变量有： $$D_{KL}(P||Q) = \sum\limits_{i=1}^N P(x_i)\ {\log}(\frac{P(x_i)}{Q(x_i)}) = \sum\limits_{i=1}^N P(x_i)\ [{\log}P(x_i)-{\log}Q(x_i)] $$ 对于连续型变量，其概率密度函数（probability density function，PDF）用小写字母$p(x)$和$q(x)$来表示，离散型随机变量的概率质量函数（probability mass function，PMF）用大写字母表示。...</p>
   </section>
-  <footer class="entry-footer">0 min&nbsp;·&nbsp;Theme PaperMod</footer>
-  <a class="entry-link" aria-label="post link to note1" href="https://yupines.github.io/post/p1/"></a>
-</article>
-
-<article class="post-entry"> 
-  <header class="entry-header">
-    <h2>note2
-    </h2>
-  </header>
-  <section class="entry-content">
-    <p>111111111111111111111111\n 11111111111</p>
-  </section>
-  <footer class="entry-footer">1 min&nbsp;·&nbsp;Theme PaperMod</footer>
-  <a class="entry-link" aria-label="post link to note2" href="https://yupines.github.io/post/p2/"></a>
+  <footer class="entry-footer">2 min&nbsp;·&nbsp;Theme PaperMod</footer>
+  <a class="entry-link" aria-label="post link to Variational Auto-Encoder" href="https://yupines.github.io/post/vae/"></a>
 </article>
     </main>
     
