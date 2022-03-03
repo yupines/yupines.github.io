@@ -17,9 +17,8 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://yupines.github.io/me/</guid>
-      <description>I am a M.S. student in Shanghai jiaotong University. 🙆‍♀️ And my major is immunology. In Mid-2020, I transferred to learn bioinformatic analysis. Generally my researches focus on profiling multi-omics data to decipher heterogenous immune microenvironment. 🌟Besides, I&#39;m intrested in applying machine learning to augmente omics-data integration, molecular dynamic and construction of immune networks. Here, I wanna blog my learning experience and share with everyone！✨ 
-Latest
-uniPort: a unified computational framework for single-cell data integration with optimal transport.</description>
+      <description>I am a M.S. student in Shanghai Institute of Immunology, Shanghai Jiao Tong University School of Medicine. In mid-2020, I transferred to learn bioinformatic analysis. Generally my researches focus on profiling multi-omics data to decipher heterogenous immune microenvironment. I&#39;m particularly interested in applying machine learning to augmente multi-omics data integration, molecular dynamic and construction of immune networks. Here, I wanna blog my learning experience and share with everyone！ 
+Latest</description>
     </item>
     
     <item>
@@ -29,8 +28,8 @@ uniPort: a unified computational framework for single-cell data integration with
       
       <guid>https://yupines.github.io/paper/</guid>
       <description>Manuscripts 
-uniPort: a unified computational framework for single-cell data integration with optimal transport. Kai Cao, Qiyu Gong, Yiguang Hong, Lin Wan. https://www.biorxiv.org/content/10.1101/2022.02.14.480323v1.article-metrics 
-Meta-transcriptomic analysis reveals the gene expression and novel conserved sub-genomic RNAs in SARS-CoV-2 and MERS-CoV. Lin Lyu, Ru Feng, Mingnan Zhang, Qiyu Gong, Yinjing Liao, Yanjiao Zhou, Xiaokui Guo, Bing Su, Yair Dorsett. https://www.biorxiv.org/content/10.1101/2022.02.14.480323v1.article-metrics 
+uniPort: a unified computational framework for single-cell data integration with optimal transport. Kai Cao*, Qiyu Gong*, Yiguang Hong, Lin Wan. https://www.biorxiv.org/content/10.1101/2022.02.14.480323v1 
+Meta-transcriptomic analysis reveals the gene expression and novel conserved sub-genomic RNAs in SARS-CoV-2 and MERS-CoV. Lin Lyu, Ru Feng, Mingnan Zhang, Qiyu Gong, Yinjing Liao, Yanjiao Zhou, Xiaokui Guo, Bing Su, Yair Dorsett. https://www.biorxiv.org/content/10.1101/2020.04.16.043224v2 
  In advance 
 Mechanism of FGL1 regulation of liver cancer tissue-resident memory CD103+CD69+CD8+T cell function.</description>
     </item>
