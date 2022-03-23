@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Principle Component Analysis | yupines</title>
+<meta name="keywords" content="" />
+<meta name="description" content="PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。
+
+ 1.协方差矩阵  
+样本均值：\(\bar{x} = \frac{1}{n}\sum\limits_{i=1}^n\ x_i\)
+样本方差：\(S^2 = \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})^2\)
+样本\(X\)和\(Y\)的协方差：\(\begin{aligned} Cov(x,y) &amp;= \mathbb{E}[(X-\mathbb{E}(X))(Y-\mathbb{E}(Y))] \\ &amp;= \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})(y_i - \bar{y}) \end{aligned}\) 协方差为0时，样本\(X\)和\(Y\)不具有线性相关性。
+n维\(X=X_{1,3…n}\) 的协方差矩阵为：\[C = \mathbb{E}[(X-\bar{X})(X-\bar{X})^T]]\] 性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。
+类间散度矩阵（scatter matrix）定义为： \[S = \sum\limits_{k=1}^n\ (X_k - \bar{X_k})(X_k - \bar{X_k})^T \] 散度矩阵即是协方差矩阵 \(C*(n-1)\) 
+ 2.矩阵特征值和特征向量  
+ 特征值与特征向量：
+\(A\)是\(n\)阶矩阵，若\(Av=\lambda v\)，则\(v\)是矩阵\(A\)的特征向量，\(\lambda\)是特征向量，系数行列式\(|\lambda E-A|\)称为A的特征多项式，\(E\)为单位矩阵。
+\[\begin{aligned} &amp; Av=\lambda v\quad\Rightarrow\quad (\lambda E -A)v=0 \quad\Rightarrow\quad \\ &amp; |\lambda E -A|= \begin{vmatrix} \lambda-a_{11} &amp; -a_{12} &amp; \ldots &amp; -a_{1n} \\ -a_{11} &amp; \lambda-a_{22} &amp; \ldots &amp; -a_{2n} \\ \ldots &amp; \ldots &amp; \ldots \\ -a_{m1} &amp; -a_{m2} &amp; \ldots &amp; \lambda-a_{mn} \end{vmatrix} =0 \end{aligned}\] 计算\(|\lambda E -A|=0\)的行列式。 特征值分解： \[A=Q\Sigma Q^{-1} \] 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，\(\Sigma\)为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。">
+<meta name="author" content="">
+<link rel="canonical" href="https://yupines.github.io/post/pca-svd/" />
+<link crossorigin="anonymous" href="/assets/css/stylesheet.min.c88963fe2d79462000fd0fb1b3737783c32855d340583e4523343f8735c787f0.css" integrity="sha256-yIlj/i15RiAA/Q&#43;xs3N3g8MoVdNAWD5FIzQ/hzXHh/A=" rel="preload stylesheet" as="style">
+<script defer crossorigin="anonymous" src="/assets/js/highlight.min.7680afc38aa6b15ddf158a4f3780b7b1f7dde7e91d26f073e6229bb7a0793c92.js" integrity="sha256-doCvw4qmsV3fFYpPN4C3sffd5&#43;kdJvBz5iKbt6B5PJI="
+    onload="hljs.initHighlightingOnLoad();"></script>
+<link rel="icon" href="https://yupines.github.io/icon/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://yupines.github.io/icon/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://yupines.github.io/icon/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://yupines.github.io/icon/apple-touch-icon.png">
+<link rel="mask-icon" href="https://yupines.github.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<meta name="generator" content="Hugo 0.92.1" />
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --hljs-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-track {
+                background: 0 0;
+            }
+
+            .list:not(.dark)::-webkit-scrollbar-thumb {
+                border-color: var(--theme);
+            }
+        }
+
+    </style>
+</noscript><meta property="og:title" content="Principle Component Analysis" />
+<meta property="og:description" content="PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。
+
+ 1.协方差矩阵  
+样本均值：\(\bar{x} = \frac{1}{n}\sum\limits_{i=1}^n\ x_i\)
+样本方差：\(S^2 = \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})^2\)
+样本\(X\)和\(Y\)的协方差：\(\begin{aligned} Cov(x,y) &amp;= \mathbb{E}[(X-\mathbb{E}(X))(Y-\mathbb{E}(Y))] \\ &amp;= \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})(y_i - \bar{y}) \end{aligned}\) 协方差为0时，样本\(X\)和\(Y\)不具有线性相关性。
+n维\(X=X_{1,3…n}\) 的协方差矩阵为：\[C = \mathbb{E}[(X-\bar{X})(X-\bar{X})^T]]\] 性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。
+类间散度矩阵（scatter matrix）定义为： \[S = \sum\limits_{k=1}^n\ (X_k - \bar{X_k})(X_k - \bar{X_k})^T \] 散度矩阵即是协方差矩阵 \(C*(n-1)\) 
+ 2.矩阵特征值和特征向量  
+ 特征值与特征向量：
+\(A\)是\(n\)阶矩阵，若\(Av=\lambda v\)，则\(v\)是矩阵\(A\)的特征向量，\(\lambda\)是特征向量，系数行列式\(|\lambda E-A|\)称为A的特征多项式，\(E\)为单位矩阵。
+\[\begin{aligned} &amp; Av=\lambda v\quad\Rightarrow\quad (\lambda E -A)v=0 \quad\Rightarrow\quad \\ &amp; |\lambda E -A|= \begin{vmatrix} \lambda-a_{11} &amp; -a_{12} &amp; \ldots &amp; -a_{1n} \\ -a_{11} &amp; \lambda-a_{22} &amp; \ldots &amp; -a_{2n} \\ \ldots &amp; \ldots &amp; \ldots \\ -a_{m1} &amp; -a_{m2} &amp; \ldots &amp; \lambda-a_{mn} \end{vmatrix} =0 \end{aligned}\] 计算\(|\lambda E -A|=0\)的行列式。 特征值分解： \[A=Q\Sigma Q^{-1} \] 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，\(\Sigma\)为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://yupines.github.io/post/pca-svd/" /><meta property="og:image" content="https://yupines.github.io/papermod-cover.png"/><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2022-02-25T00:00:00&#43;00:00" />
+<meta property="article:modified_time" content="2022-02-25T00:00:00&#43;00:00" /><meta property="og:site_name" content="yupines" />
+
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content="https://yupines.github.io/papermod-cover.png"/>
+
+<meta name="twitter:title" content="Principle Component Analysis"/>
+<meta name="twitter:description" content="PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。
+
+ 1.协方差矩阵  
+样本均值：\(\bar{x} = \frac{1}{n}\sum\limits_{i=1}^n\ x_i\)
+样本方差：\(S^2 = \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})^2\)
+样本\(X\)和\(Y\)的协方差：\(\begin{aligned} Cov(x,y) &amp;= \mathbb{E}[(X-\mathbb{E}(X))(Y-\mathbb{E}(Y))] \\ &amp;= \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})(y_i - \bar{y}) \end{aligned}\) 协方差为0时，样本\(X\)和\(Y\)不具有线性相关性。
+n维\(X=X_{1,3…n}\) 的协方差矩阵为：\[C = \mathbb{E}[(X-\bar{X})(X-\bar{X})^T]]\] 性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。
+类间散度矩阵（scatter matrix）定义为： \[S = \sum\limits_{k=1}^n\ (X_k - \bar{X_k})(X_k - \bar{X_k})^T \] 散度矩阵即是协方差矩阵 \(C*(n-1)\) 
+ 2.矩阵特征值和特征向量  
+ 特征值与特征向量：
+\(A\)是\(n\)阶矩阵，若\(Av=\lambda v\)，则\(v\)是矩阵\(A\)的特征向量，\(\lambda\)是特征向量，系数行列式\(|\lambda E-A|\)称为A的特征多项式，\(E\)为单位矩阵。
+\[\begin{aligned} &amp; Av=\lambda v\quad\Rightarrow\quad (\lambda E -A)v=0 \quad\Rightarrow\quad \\ &amp; |\lambda E -A|= \begin{vmatrix} \lambda-a_{11} &amp; -a_{12} &amp; \ldots &amp; -a_{1n} \\ -a_{11} &amp; \lambda-a_{22} &amp; \ldots &amp; -a_{2n} \\ \ldots &amp; \ldots &amp; \ldots \\ -a_{m1} &amp; -a_{m2} &amp; \ldots &amp; \lambda-a_{mn} \end{vmatrix} =0 \end{aligned}\] 计算\(|\lambda E -A|=0\)的行列式。 特征值分解： \[A=Q\Sigma Q^{-1} \] 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，\(\Sigma\)为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。"/>
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://yupines.github.io/post/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Principle Component Analysis",
+      "item": "https://yupines.github.io/post/pca-svd/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Principle Component Analysis",
+  "name": "Principle Component Analysis",
+  "description": "PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。\n\n 1.协方差矩阵  \n样本均值：\\(\\bar{x} = \\frac{1}{n}\\sum\\limits_{i=1}^n\\ x_i\\)\n样本方差：\\(S^2 = \\frac{1}{n-1}\\sum\\limits_{i=1}^n\\ (x_i - \\bar{x})^2\\)\n样本\\(X\\)和\\(Y\\)的协方差：\\(\\begin{aligned} Cov(x,y) \u0026amp;= \\mathbb{E}[(X-\\mathbb{E}(X))(Y-\\mathbb{E}(Y))] \\\\ \u0026amp;= \\frac{1}{n-1}\\sum\\limits_{i=1}^n\\ (x_i - \\bar{x})(y_i - \\bar{y}) \\end{aligned}\\) 协方差为0时，样本\\(X\\)和\\(Y\\)不具有线性相关性。\nn维\\(X=X_{1,3…n}\\) 的协方差矩阵为：\\[C = \\mathbb{E}[(X-\\bar{X})(X-\\bar{X})^T]]\\] 性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。\n类间散度矩阵（scatter matrix）定义为： \\[S = \\sum\\limits_{k=1}^n\\ (X_k - \\bar{X_k})(X_k - \\bar{X_k})^T \\] 散度矩阵即是协方差矩阵 \\(C*(n-1)\\) \n 2.矩阵特征值和特征向量  \n 特征值与特征向量：\n\\(A\\)是\\(n\\)阶矩阵，若\\(Av=\\lambda v\\)，则\\(v\\)是矩阵\\(A\\)的特征向量，\\(\\lambda\\)是特征向量，系数行列式\\(|\\lambda E-A|\\)称为A的特征多项式，\\(E\\)为单位矩阵。\n\\[\\begin{aligned} \u0026amp; Av=\\lambda v\\quad\\Rightarrow\\quad (\\lambda E -A)v=0 \\quad\\Rightarrow\\quad \\\\ \u0026amp; |\\lambda E -A|= \\begin{vmatrix} \\lambda-a_{11} \u0026amp; -a_{12} \u0026amp; \\ldots \u0026amp; -a_{1n} \\\\ -a_{11} \u0026amp; \\lambda-a_{22} \u0026amp; \\ldots \u0026amp; -a_{2n} \\\\ \\ldots \u0026amp; \\ldots \u0026amp; \\ldots \\\\ -a_{m1} \u0026amp; -a_{m2} \u0026amp; \\ldots \u0026amp; \\lambda-a_{mn} \\end{vmatrix} =0 \\end{aligned}\\] 计算\\(|\\lambda E -A|=0\\)的行列式。 特征值分解： \\[A=Q\\Sigma Q^{-1} \\] 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，\\(\\Sigma\\)为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。",
+  "keywords": [
+    
+  ],
+  "articleBody": "PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。\n\n 1.协方差矩阵  \n样本均值：\\(\\bar{x} = \\frac{1}{n}\\sum\\limits_{i=1}^n\\ x_i\\)\n样本方差：\\(S^2 = \\frac{1}{n-1}\\sum\\limits_{i=1}^n\\ (x_i - \\bar{x})^2\\)\n样本\\(X\\)和\\(Y\\)的协方差：\\(\\begin{aligned} Cov(x,y) \u0026= \\mathbb{E}[(X-\\mathbb{E}(X))(Y-\\mathbb{E}(Y))] \\\\ \u0026= \\frac{1}{n-1}\\sum\\limits_{i=1}^n\\ (x_i - \\bar{x})(y_i - \\bar{y}) \\end{aligned}\\) 协方差为0时，样本\\(X\\)和\\(Y\\)不具有线性相关性。\nn维\\(X=X_{1,3…n}\\) 的协方差矩阵为：\\[C = \\mathbb{E}[(X-\\bar{X})(X-\\bar{X})^T]]\\] 性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。\n类间散度矩阵（scatter matrix）定义为： \\[S = \\sum\\limits_{k=1}^n\\ (X_k - \\bar{X_k})(X_k - \\bar{X_k})^T \\] 散度矩阵即是协方差矩阵 \\(C*(n-1)\\) \n 2.矩阵特征值和特征向量  \n 特征值与特征向量：\n\\(A\\)是\\(n\\)阶矩阵，若\\(Av=\\lambda v\\)，则\\(v\\)是矩阵\\(A\\)的特征向量，\\(\\lambda\\)是特征向量，系数行列式\\(|\\lambda E-A|\\)称为A的特征多项式，\\(E\\)为单位矩阵。\n\\[\\begin{aligned} \u0026 Av=\\lambda v\\quad\\Rightarrow\\quad (\\lambda E -A)v=0 \\quad\\Rightarrow\\quad \\\\ \u0026 |\\lambda E -A|= \\begin{vmatrix} \\lambda-a_{11} \u0026 -a_{12} \u0026 \\ldots \u0026 -a_{1n} \\\\ -a_{11} \u0026 \\lambda-a_{22} \u0026 \\ldots \u0026 -a_{2n} \\\\ \\ldots \u0026 \\ldots \u0026 \\ldots \\\\ -a_{m1} \u0026 -a_{m2} \u0026 \\ldots \u0026 \\lambda-a_{mn} \\end{vmatrix} =0 \\end{aligned}\\] 计算\\(|\\lambda E -A|=0\\)的行列式。 特征值分解： \\[A=Q\\Sigma Q^{-1} \\] 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，\\(\\Sigma\\)为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。\n\n 3.SVD分解  \nSVD适用于任意矩阵分解： \\[A=U\\Sigma V^T\\] 其中，A是\\(m*n\\)的矩阵，U则是\\(m*m\\)的方阵，称为左奇异向量，\\(V^T\\)是\\(n*n\\)的方阵，称为右奇异向量，\\(\\Sigma\\)上的值从大到小排序。\nSVD分解矩阵A的步骤：\n\\(AA^T\\)的特征向量构成构成\\(U\\)；\n\\(A^TA\\)的特征向量构成构成\\(V\\)；\n\\(A^TA\\)或者\\(AA^T\\)的特征值求平方根构成\\(\\Sigma\\).\n\n 4.PCA原理  \n构建超平面对所有样本进行恰当的表达，需满足：\na.最近重构性：样本点到超平面的距离足够近；\nb.最大可分性：样本点到超平面的投影足够小.\n在样本进行中心化后，假设投影变换后的新坐标为 \\(\\{w_1,w_2,w_3,\\ldots,w_d \\}\\)，\\(w_i\\) 是标准的正交基向量。若降维到 \\(d'，则样本点在新空间内的投影为\\(z_i = (w_{i1},w_{i2},w_{i3},\\ldots,w_{id'})\\)，对于维度\\(j\\)有\\(x_i\\)的投影点的坐标为\\(z_{ij}=w_j^Tx_i\\)，基于\\(z_i\\)来重构\\(x\\)，则\\(\\hat{x}=\\sum\\limits_{j=1}^{d'}z_{ij}\\ w_j\\).  来自小曹老师的注解 基于最近重构性理解：\n若达到最大重构性，需满足重构点和样本点的距离和最小，\n已知\\(W^TW=I,z_i=W^Tx_i\\)，则 \\[\\begin{aligned} \\sum\\limits_{i=1}^m \\left\\Vert \\sum\\limits_{j=1}^{d'}z_{ij}w_j-x_i \\right\\Vert_2^2 \u0026= \\sum\\limits_{i=1}^m \\left\\Vert Wz_i-x_i \\right\\Vert_2^2 \\\\ \u0026= \\sum\\limits_{i=1}^m (Wz_i-x_i)^T(Wz_i-x_i) \\\\ \u0026= \\sum\\limits_{i=1}^m (z_i^TW^TWz_i-z_i^TW^Tx_i-x_i^TWz_i+x^T_ix_i) \\\\ \u0026= \\sum\\limits_{i=1}^m (z_i^TW^TWz_i-2z_i^TW^Tx_i+x^T_ix_i)\\\\ \u0026= \\sum\\limits_{i=1}^m z_i^Tz_i -2\\sum\\limits_{i=1}^m z_i^TW^Tx_i+const \\\\ \u0026= -\\sum\\limits_{i=1}^m z_i^Tz_i +const \\\\ \u0026= -\\sum\\limits_{i=1}^m tr(z_iz_i^T) +const \\\\ \u0026= -tr(\\sum\\limits_{i=1}^m z_iz_i^T) +const \\\\ \u0026= -tr(\\sum\\limits_{i=1}^m W^Tx_ix_i^TW) +const \\\\ \u0026 \\propto tr(W^T(\\sum\\limits_{i=1}^m x_ix_i^T)W) \\end{aligned}\\] \\(\\sum\\limits_{i=1}^m x_ix_i^T\\)为协方差矩阵（严格为\\(\\frac{1}{m-1}\\)，可近似\\(\\frac{1}{m}\\)），因此PCA的优化目标为： \\[\\begin{aligned} \u0026 \\mathop{min}\\limits_{w}\\ -tr(W^TXX^TW) \\\\ \u0026 s.t.\\ W^TW=I \\end{aligned}\\]\n背景知识：拉格朗日乘子 设 \\(f:R^{n\\times m} \\to R,\\ \\Theta:R^{n\\times m} \\to R^{p\\times q}\\)，对于条件极值问题 \\(max\\ f(X) \\quad s.t\\ \\Theta(X) = 0\\) 或者 \\(min\\ f(X) \\quad s.t\\ \\Theta(X) = 0\\)，其\\(Lagrange\\)函数为： \\[L(X,Z) = f(X)+tr(Z^T\\Theta)\\] \\(Z\\)为大小与\\(\\Theta(X)\\)完全相同的矩阵，且每个元素都是\\(Lagrange\\)乘子.\n在\\(X\\in R^{d\\times m},W\\in R^{d\\times d'}, I\\in R^{d'\\times d'}\\)条件下，PCA优化目标的\\(Lagrange\\)函数为： \\[\\begin{aligned} L(W,\\Theta) \u0026= -tr(W^TXX^TW)+\\langle \\Theta,W^TW-I \\rangle \\\\ \u0026= -tr(W^TXX^TW)+tr(\\Theta(W^TW-I)) \\end{aligned}\\] 其中，\\(\\Theta \\in R^{d'\\times d'}\\)为\\(Lagrange\\)乘子矩阵，维度恒等于约束条件的维度，\\(\\langle \\Theta,W^TW-I \\rangle = tr(\\Theta(W^TW-I))\\)为矩阵的内积。若仅考虑\\(w^T_iw_i=1\\ (i=1,2,\\ldots,d')\\)，则\\(\\Theta\\)为对角矩阵，令新的\\(Lagrange\\)乘子为\\(\\Lambda = diag(\\lambda_1,\\lambda_2,\\ldots,\\lambda_{d'}) \\in R^{d'\\times d'}\\)，则新的\\(Lagrange\\)函数为： \\[L(W,\\Lambda) = -tr(W^TXX^TW)+tr(\\Lambda^T(W^TW-I)) \\] 由微分公式\\(\\frac{\\partial}{\\partial X}tr(X^TBX)=BX+B^TX,\\ \\frac{\\partial}{\\partial X}tr(BX^TX)=XB^T+XB\\)， 对\\(W\\)求导可得到： \\[\\begin{aligned} \\frac{\\partial L(W,\\Lambda)}{\\partial,W} \u0026= -\\frac{\\partial}{\\partial W} tr(W^TXX^TW) + \\frac{\\partial}{\\partial W} tr(\\Lambda^T(W^TW-I)) \\\\ \u0026= -2XX^TW + W\\Lambda +W\\Lambda^T \\\\ \u0026= -2XX^TW + 2W\\Lambda \\end{aligned}\\] 令\\(\\frac{\\partial L(W,\\Lambda)}{\\partial,W} =0\\) 可得到： \\[XX^TW=W\\Lambda\\] 将\\(W\\)和\\(\\Lambda\\)展开可得： \\[XX^Tw_i=\\lambda_i w_i,\\ i = 1,2,\\ldots,d' \\] 此式为矩阵特征值和特征向量的定义式，\\(\\lambda_i,w_i\\)分别为\\(XX^T\\)的特征值和特征向量，且\\(XX^T\\)为实对称矩阵，则\\(w\\)满足\\(w_i^Tw_i=1,w_i^Tw_i=0\\ (i\\ne j)\\)，将\\(XX^Tw_i=\\lambda_i w_i\\)代入目标函数可得到： \\[\\begin{aligned} \\mathop{min}\\limits_{w}\\ -tr(W^TXX^TW) \u0026= \\mathop{max}\\limits_{w}\\ tr(W^TXX^TW) \\\\ \u0026= \\mathop{max}\\limits_{w}\\ \\sum\\limits_{i=1}^{d'}w_i^TXX^Tw_i \\\\ \u0026= \\mathop{max}\\limits_{w}\\ \\sum\\limits_{i=1}^{d'}w_i^T\\lambda_iw_i \\\\ \u0026= \\mathop{max}\\limits_{w}\\ \\sum\\limits_{i=1}^{d'} \\lambda_i \\\\ \\end{aligned}\\] 基于最大可分性理解:\n投影后的样本点满足方差最大化，其协方差矩阵为\\(\\sum\\limits_{i}W^Tx_ix_i^TW\\)，于是优化目标可以写成 \\[\\begin{aligned} \u0026 \\mathop{max}\\limits_{w}\\ tr(W^TXX^TW) \\\\ \u0026 s.t.\\ W^TW=I \\end{aligned}\\] STEPS:\n中心化：每一特征减去各自的平均值\n 计算协方差矩阵：\\(XX^T\\)\n 求解\\(XX^T\\)的特征值和特征向量（待补充）\nd.将特征值从大到小排列，选取前\\(d'\\)个，将其对应的特征向量作为行向量组成矩阵\\(W^T\\)。\ne.数据变换\\(Z=W^TX\\) \n   5.Kernelized PCA  \n非线性降维的一种常用方法是，基于核技巧对线性降维方法进行“核化”，以核主成分分析（Kernelized PCA，KPCA）为例，其主要思想是将原始数据投影到更高维度，把原始数据向不同方向投影，便于找到合适的高维线性分类平面。\n将数据投影到\\(W\\)确定的平面： \\[ZZ^Tw_j=\\lambda_jw_j\\] \\(z_i\\)是样本在高维空间中的像点: \\[w_j=\\frac{1}{\\lambda_j}(\\sum\\limits_{i}^m z_iz_i^T)w_j = \\sum\\limits_{i}^m z_i \\frac{z_i^T w_j}{\\lambda_j} = \\sum\\limits_{i}^m z_i\\alpha_i^j = Z\\alpha^j \\] 其中 \\(\\alpha_i^j=\\frac{1}{\\lambda_j} z_i^Tw_j\\) 为\\(\\alpha_i\\)在\\(j\\)方向上的分量。将\\(w_j=Z\\alpha^j\\)代入上述公式可得： \\[\\begin{aligned} ZZ^TZ\\alpha^j \u0026=\\lambda_j Z\\alpha^j \\\\ ZZ^TZ\\alpha^j \u0026=Z \\lambda_j \\alpha^j \\end{aligned}\\] 目标是求出\\(w_j\\)，即满足条件的\\(\\alpha_j\\)，满足上式的\\(\\alpha_j\\)亦满足： \\[Z^TZ\\alpha^j = \\lambda_j \\alpha^j \\] 令\\(Z^TZ=K\\)，则 \\[K \\alpha^j = \\lambda_j \\alpha^j\\] 转变为求解\\(K\\)前\\(d'\\)个特征值和特征向量的问题。\n假设\\(z_i\\)由原始样本点\\(x_i\\)通过映射\\(\\phi\\)得到，则有\\(z_i=\\phi(x_i)\\)。一般情况下，我们不清楚\\(\\phi\\)的分布，故引入核函数： \\[ k(i,j) = \\langle \\phi(i),\\phi(j) \\rangle = \\phi(i)^T\\phi(j) \\] 矩阵\\(K\\)的第\\(i\\)行\\(j\\)元素即为 \\(K_{ij}=z_i^Tz_j=k(i,j)\\).\n对于新的样本\\(x\\)，其投影后的第\\(j\\)维坐标为 \\[ z_j = w^T_j \\phi(x) = \\sum\\limits_{i=1}^m \\alpha_i^j \\phi(x_i)^T \\phi(x) = \\sum\\limits_{i=1}^m \\alpha_i^j k(i,j) \\]\n\n参考链接：\nhttps://zhuanlan.zhihu.com/p/37777074 https://datawhalechina.github.io/pumpkin-book/#/chapter10/chapter10?id=_1014\nhttps://blog.csdn.net/Junerror/article/details/80222540\nhttps://zhuanlan.zhihu.com/p/59775730\n\n",
+  "wordCount" : "421",
+  "inLanguage": "en",
+  "datePublished": "2022-02-25T00:00:00Z",
+  "dateModified": "2022-02-25T00:00:00Z",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://yupines.github.io/post/pca-svd/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "yupines",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://yupines.github.io/icon/favicon.ico"
+    }
+  }
+}
+</script><script>
+  MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$','$$'], ['\\[', '\\]']],
+      processEscapes: true,
+      processEnvironments: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  window.addEventListener('load', (event) => {
+      document.querySelectorAll("mjx-container").forEach(function(x){
+        x.parentElement.classList += 'has-jax'})
+    });
+
+</script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script type="text/javascript">
+function (selector) {
+  return Array.prototype.slice.call(document.querySelectorAll(selector), 0);
+}
+
+function replace_code_to_span(node) {
+  is_inline_math = /^$(.)$$/.exec(node.textContent);
+  is_display_math = /^$$(.)$$$/ms.exec(node.textContent) ||
+          /^\begin{.+}(.*)\end{.+}/ms.exec(node.textContent);
+  if (is_inline_math || is_display_math) {
+    var parent = node.parentNode;
+    var replacement = document.createElement('span');
+    if (is_display_math) {
+      replacement.class = "yuuki_mathjax_inline"
+    } else {
+      replacement.class = "yuuki_mathjax_display"
+    }
+    replacement.textContent = node.textContent;
+    parent.replaceChild(replacement, node);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  yuuki_query_all_nodes_as_array("code").map(replace_code_to_span);
+});
+</script>
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['\\(','\\)']]},
+  displayMath: [['$$','$$'], ['\\[','\\]']]
+});
+</script>
+
+
+
+</head>
+
+<body class="" id="top">
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.body.classList.add('dark');
+    } else if (localStorage.getItem("pref-theme") === "light") {
+        document.body.classList.remove('dark')
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.body.classList.add('dark');
+    }
+
+</script>
+
+<header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://yupines.github.io/" accesskey="h" title="yupines (Alt + H)">yupines</a>
+            <span class="logo-switches">
+                <button id="theme-toggle" accesskey="t" title="(Alt + T)">
+                    <svg id="moon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg id="sun" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </span>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://yupines.github.io/me/" title="About me">
+                    <span>About me</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://yupines.github.io/post/" title="Archives">
+                    <span>Archives</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://yupines.github.io/post/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://yupines.github.io/post/" title="Series">
+                    <span>Series</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title">
+      Principle Component Analysis
+    </h1>
+    <div class="post-meta"><span title='2022-02-25 00:00:00 +0000 UTC'>February 25, 2022</span>
+
+</div>
+  </header> 
+  <div class="post-content"><p><font size=3 >
+PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。<br>
+</font><br> <br><br></p>
+<p><font size=4 ><strong> 1.协方差矩阵 </strong> </font><br><br>
+<font size=3 > 样本均值：<span class="math inline">\(\bar{x} =
+\frac{1}{n}\sum\limits_{i=1}^n\ x_i\)</span><br> 样本方差：<span
+class="math inline">\(S^2 = \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i -
+\bar{x})^2\)</span><br> 样本<span
+class="math inline">\(X\)</span>和<span
+class="math inline">\(Y\)</span>的协方差：<span
+class="math inline">\(\begin{aligned} Cov(x,y) &amp;=
+\mathbb{E}[(X-\mathbb{E}(X))(Y-\mathbb{E}(Y))] \\ &amp;=
+\frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})(y_i - \bar{y})
+\end{aligned}\)</span> <br> 协方差为0时，样本<span
+class="math inline">\(X\)</span>和<span
+class="math inline">\(Y\)</span>不具有线性相关性。<br><br> n维<span
+class="math inline">\(X=X_{1,3…n}\)</span> 的协方差矩阵为：<span
+class="math display">\[C =
+\mathbb{E}[(X-\bar{X})(X-\bar{X})^T]]\]</span>
+性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。<br><br>
+类间散度矩阵（scatter matrix）定义为： <span class="math display">\[S =
+\sum\limits_{k=1}^n\ (X_k - \bar{X_k})(X_k - \bar{X_k})^T
+\]</span> 散度矩阵即是协方差矩阵 <span
+class="math inline">\(C*(n-1)\)</span> <br> </font><br> <br><br></p>
+<p><font size=4 ><strong> 2.矩阵特征值和特征向量 </strong>
+</font><br><br> <font size=3 ><strong> 特征值与特征向量：</strong><br>
+<span class="math inline">\(A\)</span>是<span
+class="math inline">\(n\)</span>阶矩阵，若<span
+class="math inline">\(Av=\lambda v\)</span>，则<span
+class="math inline">\(v\)</span>是矩阵<span
+class="math inline">\(A\)</span>的特征向量，<span
+class="math inline">\(\lambda\)</span>是特征向量，系数行列式<span
+class="math inline">\(|\lambda E-A|\)</span>称为A的特征多项式，<span
+class="math inline">\(E\)</span>为单位矩阵。<br> <span
+class="math display">\[\begin{aligned}
+&amp; Av=\lambda v\quad\Rightarrow\quad
+(\lambda E -A)v=0 \quad\Rightarrow\quad \\
+&amp; |\lambda E -A|= \begin{vmatrix}
+\lambda-a_{11} &amp; -a_{12} &amp; \ldots &amp; -a_{1n} \\
+-a_{11} &amp; \lambda-a_{22} &amp; \ldots &amp; -a_{2n} \\
+\ldots &amp; \ldots &amp; \ldots \\
+-a_{m1} &amp; -a_{m2} &amp; \ldots &amp; \lambda-a_{mn}
+\end{vmatrix} =0
+\end{aligned}\]</span> 计算<span class="math inline">\(|\lambda E
+-A|=0\)</span>的行列式。 <br><br> <strong>特征值分解：</strong> <span
+class="math display">\[A=Q\Sigma Q^{-1}
+\]</span> 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，<span
+class="math inline">\(\Sigma\)</span>为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。<br>
+</font><br> <br><br></p>
+<p><font size=4 ><strong> 3.SVD分解 </strong> </font><br><br>
+<font size=3 > SVD适用于任意矩阵分解： <span
+class="math display">\[A=U\Sigma V^T\]</span> 其中，A是<span
+class="math inline">\(m*n\)</span>的矩阵，U则是<span
+class="math inline">\(m*m\)</span>的方阵，称为左奇异向量，<span
+class="math inline">\(V^T\)</span>是<span
+class="math inline">\(n*n\)</span>的方阵，称为右奇异向量，<span
+class="math inline">\(\Sigma\)</span>上的值从大到小排序。<br><br></p>
+<p>SVD分解矩阵A的步骤：<br> <span
+class="math inline">\(AA^T\)</span>的特征向量构成构成<span
+class="math inline">\(U\)</span>；<br> <span
+class="math inline">\(A^TA\)</span>的特征向量构成构成<span
+class="math inline">\(V\)</span>；<br> <span
+class="math inline">\(A^TA\)</span>或者<span
+class="math inline">\(AA^T\)</span>的特征值求平方根构成<span
+class="math inline">\(\Sigma\)</span>.<br> </font><br> <br><br></p>
+<font size=4 ><strong> 4.PCA原理 </strong> </font><br><br>
+<font size=3 > 构建超平面对所有样本进行恰当的表达，需满足：<br>
+a.最近重构性：样本点到超平面的距离足够近；<br>
+b.最大可分性：样本点到超平面的投影足够小.<br>
+在样本进行中心化后，假设投影变换后的新坐标为 <span
+class="math inline">\(\{w_1,w_2,w_3,\ldots,w_d \}\)</span>，<span
+class="math inline">\(w_i\)</span> 是标准的正交基向量。若降维到 <span
+class="math inline">\(d&#39;&lt;
+d\)</span>，则样本点在新空间内的投影为<span class="math inline">\(z_i =
+(w_{i1},w_{i2},w_{i3},\ldots,w_{id&#39;})\)</span>，对于维度<span
+class="math inline">\(j\)</span>有<span
+class="math inline">\(x_i\)</span>的投影点的坐标为<span
+class="math inline">\(z_{ij}=w_j^Tx_i\)</span>，基于<span
+class="math inline">\(z_i\)</span>来重构<span
+class="math inline">\(x\)</span>，则<span
+class="math inline">\(\hat{x}=\sum\limits_{j=1}^{d&#39;}z_{ij}\
+w_j\)</span>. <br>
+<div data-align="center">
+<img src="img/PCA-SVD1.jpg" width="50%" height="60%">
+</div>
+<p style="text-align: center; font-size:0.75em;">
+来自小曹老师的注解
+</p>
+<p><strong>基于最近重构性理解：</strong></p>
+<p>若达到最大重构性，需满足重构点和样本点的距离和最小，<br> 已知<span
+class="math inline">\(W^TW=I,z_i=W^Tx_i\)</span>，则 <span
+class="math display">\[\begin{aligned}
+\sum\limits_{i=1}^m \left\Vert \sum\limits_{j=1}^{d&#39;}z_{ij}w_j-x_i
+\right\Vert_2^2
+&amp;= \sum\limits_{i=1}^m \left\Vert Wz_i-x_i \right\Vert_2^2 \\
+&amp;= \sum\limits_{i=1}^m (Wz_i-x_i)^T(Wz_i-x_i) \\
+&amp;= \sum\limits_{i=1}^m (z_i^TW^TWz_i-z_i^TW^Tx_i-x_i^TWz_i+x^T_ix_i)
+\\
+&amp;= \sum\limits_{i=1}^m (z_i^TW^TWz_i-2z_i^TW^Tx_i+x^T_ix_i)\\
+&amp;= \sum\limits_{i=1}^m z_i^Tz_i -2\sum\limits_{i=1}^m
+z_i^TW^Tx_i+const \\
+&amp;= -\sum\limits_{i=1}^m z_i^Tz_i +const \\
+&amp;= -\sum\limits_{i=1}^m tr(z_iz_i^T) +const \\
+&amp;= -tr(\sum\limits_{i=1}^m z_iz_i^T) +const \\
+&amp;= -tr(\sum\limits_{i=1}^m W^Tx_ix_i^TW) +const \\
+&amp; \propto tr(W^T(\sum\limits_{i=1}^m x_ix_i^T)W)
+\end{aligned}\]</span> <span class="math inline">\(\sum\limits_{i=1}^m
+x_ix_i^T\)</span>为协方差矩阵（严格为<span
+class="math inline">\(\frac{1}{m-1}\)</span>，可近似<span
+class="math inline">\(\frac{1}{m}\)</span>），因此PCA的优化目标为：
+<span class="math display">\[\begin{aligned}
+&amp; \mathop{min}\limits_{w}\ -tr(W^TXX^TW) \\
+&amp; s.t.\ W^TW=I
+\end{aligned}\]</span></p>
+<p><strong>背景知识：拉格朗日乘子</strong> <br> 设 <span
+class="math inline">\(f:R^{n\times m} \to R,\  \Theta:R^{n\times m} \to
+R^{p\times q}\)</span>，对于条件极值问题 <span
+class="math inline">\(max\ f(X) \quad s.t\ \Theta(X) = 0\)</span> 或者
+<span class="math inline">\(min\ f(X) \quad s.t\ \Theta(X) =
+0\)</span>，其<span class="math inline">\(Lagrange\)</span>函数为：
+<span class="math display">\[L(X,Z) = f(X)+tr(Z^T\Theta)\]</span> <span
+class="math inline">\(Z\)</span>为大小与<span
+class="math inline">\(\Theta(X)\)</span>完全相同的矩阵，且每个元素都是<span
+class="math inline">\(Lagrange\)</span>乘子.<br><br> 在<span
+class="math inline">\(X\in R^{d\times m},W\in R^{d\times d&#39;}, I\in
+R^{d&#39;\times d&#39;}\)</span>条件下，PCA优化目标的<span
+class="math inline">\(Lagrange\)</span>函数为： <span
+class="math display">\[\begin{aligned}
+L(W,\Theta) &amp;= -tr(W^TXX^TW)+\langle \Theta,W^TW-I \rangle \\
+&amp;= -tr(W^TXX^TW)+tr(\Theta(W^TW-I))
+\end{aligned}\]</span> 其中，<span class="math inline">\(\Theta \in
+R^{d&#39;\times d&#39;}\)</span>为<span
+class="math inline">\(Lagrange\)</span>乘子矩阵，维度恒等于约束条件的维度，<span
+class="math inline">\(\langle \Theta,W^TW-I \rangle =
+tr(\Theta(W^TW-I))\)</span>为矩阵的内积。若仅考虑<span
+class="math inline">\(w^T_iw_i=1\
+(i=1,2,\ldots,d&#39;)\)</span>，则<span
+class="math inline">\(\Theta\)</span>为对角矩阵，令新的<span
+class="math inline">\(Lagrange\)</span>乘子为<span
+class="math inline">\(\Lambda =
+diag(\lambda_1,\lambda_2,\ldots,\lambda_{d&#39;}) \in R^{d&#39;\times
+d&#39;}\)</span>，则新的<span
+class="math inline">\(Lagrange\)</span>函数为： <span
+class="math display">\[L(W,\Lambda) =
+-tr(W^TXX^TW)+tr(\Lambda^T(W^TW-I))
+\]</span> 由微分公式<span class="math inline">\(\frac{\partial}{\partial
+X}tr(X^TBX)=BX+B^TX,\  \frac{\partial}{\partial
+X}tr(BX^TX)=XB^T+XB\)</span>， 对<span
+class="math inline">\(W\)</span>求导可得到： <span
+class="math display">\[\begin{aligned}
+\frac{\partial L(W,\Lambda)}{\partial,W} &amp;=
+-\frac{\partial}{\partial W} tr(W^TXX^TW) + \frac{\partial}{\partial W}
+tr(\Lambda^T(W^TW-I)) \\
+&amp;= -2XX^TW + W\Lambda +W\Lambda^T \\
+&amp;= -2XX^TW + 2W\Lambda
+\end{aligned}\]</span> 令<span class="math inline">\(\frac{\partial
+L(W,\Lambda)}{\partial,W} =0\)</span> 可得到： <span
+class="math display">\[XX^TW=W\Lambda\]</span> 将<span
+class="math inline">\(W\)</span>和<span
+class="math inline">\(\Lambda\)</span>展开可得： <span
+class="math display">\[XX^Tw_i=\lambda_i w_i,\ i = 1,2,\ldots,d&#39;
+\]</span> 此式为矩阵特征值和特征向量的定义式，<span
+class="math inline">\(\lambda_i,w_i\)</span>分别为<span
+class="math inline">\(XX^T\)</span>的特征值和特征向量，且<span
+class="math inline">\(XX^T\)</span>为实对称矩阵，则<span
+class="math inline">\(w\)</span>满足<span
+class="math inline">\(w_i^Tw_i=1,w_i^Tw_i=0\ (i\ne j)\)</span>，将<span
+class="math inline">\(XX^Tw_i=\lambda_i w_i\)</span>代入目标函数可得到：
+<span class="math display">\[\begin{aligned}
+\mathop{min}\limits_{w}\ -tr(W^TXX^TW) &amp;= \mathop{max}\limits_{w}\
+tr(W^TXX^TW) \\
+&amp;= \mathop{max}\limits_{w}\ \sum\limits_{i=1}^{d&#39;}w_i^TXX^Tw_i
+\\
+&amp;= \mathop{max}\limits_{w}\
+\sum\limits_{i=1}^{d&#39;}w_i^T\lambda_iw_i \\
+&amp;= \mathop{max}\limits_{w}\ \sum\limits_{i=1}^{d&#39;} \lambda_i \\
+\end{aligned}\]</span> <br> <strong>基于最大可分性理解:</strong></p>
+<p>投影后的样本点满足方差最大化，其协方差矩阵为<span
+class="math inline">\(\sum\limits_{i}W^Tx_ix_i^TW\)</span>，于是优化目标可以写成
+<span class="math display">\[\begin{aligned}
+&amp; \mathop{max}\limits_{w}\ tr(W^TXX^TW) \\
+&amp; s.t.\ W^TW=I
+\end{aligned}\]</span> <br> <strong>STEPS:</strong></p>
+<ol type="a">
+<li>中心化：每一特征减去各自的平均值<br></li>
+<li>计算协方差矩阵：<span class="math inline">\(XX^T\)</span><br></li>
+<li>求解<span
+class="math inline">\(XX^T\)</span>的特征值和特征向量（待补充）<br>
+d.将特征值从大到小排列，选取前<span
+class="math inline">\(d&#39;\)</span>个，将其对应的特征向量作为行向量组成矩阵<span
+class="math inline">\(W^T\)</span>。<br> e.数据变换<span
+class="math inline">\(Z=W^TX\)</span> <br> </font><br> <br><br></li>
+</ol>
+<p><font size=4 ><strong> 5.Kernelized PCA </strong> </font><br><br>
+<font size=3 >
+非线性降维的一种常用方法是，基于核技巧对线性降维方法进行“核化”，以核主成分分析（Kernelized
+PCA，KPCA）为例，其主要思想是将原始数据投影到更高维度，把原始数据向不同方向投影，便于找到合适的高维线性分类平面。</p>
+<p>将数据投影到<span class="math inline">\(W\)</span>确定的平面： <span
+class="math display">\[ZZ^Tw_j=\lambda_jw_j\]</span> <span
+class="math inline">\(z_i\)</span>是样本在高维空间中的像点: <span
+class="math display">\[w_j=\frac{1}{\lambda_j}(\sum\limits_{i}^m
+z_iz_i^T)w_j
+= \sum\limits_{i}^m z_i \frac{z_i^T w_j}{\lambda_j}
+= \sum\limits_{i}^m z_i\alpha_i^j
+= Z\alpha^j
+\]</span> 其中 <span
+class="math inline">\(\alpha_i^j=\frac{1}{\lambda_j} z_i^Tw_j\)</span>
+为<span class="math inline">\(\alpha_i\)</span>在<span
+class="math inline">\(j\)</span>方向上的分量。将<span
+class="math inline">\(w_j=Z\alpha^j\)</span>代入上述公式可得： <span
+class="math display">\[\begin{aligned}
+ZZ^TZ\alpha^j &amp;=\lambda_j Z\alpha^j \\
+ZZ^TZ\alpha^j &amp;=Z \lambda_j \alpha^j
+\end{aligned}\]</span> 目标是求出<span
+class="math inline">\(w_j\)</span>，即满足条件的<span
+class="math inline">\(\alpha_j\)</span>，满足上式的<span
+class="math inline">\(\alpha_j\)</span>亦满足： <span
+class="math display">\[Z^TZ\alpha^j = \lambda_j \alpha^j
+\]</span> 令<span class="math inline">\(Z^TZ=K\)</span>，则 <span
+class="math display">\[K \alpha^j = \lambda_j \alpha^j\]</span>
+转变为求解<span class="math inline">\(K\)</span>前<span
+class="math inline">\(d&#39;\)</span>个特征值和特征向量的问题。</p>
+<p>假设<span class="math inline">\(z_i\)</span>由原始样本点<span
+class="math inline">\(x_i\)</span>通过映射<span
+class="math inline">\(\phi\)</span>得到，则有<span
+class="math inline">\(z_i=\phi(x_i)\)</span>。一般情况下，我们不清楚<span
+class="math inline">\(\phi\)</span>的分布，故引入核函数： <span
+class="math display">\[ k(i,j) = \langle \phi(i),\phi(j) \rangle =
+\phi(i)^T\phi(j)
+\]</span> 矩阵<span class="math inline">\(K\)</span>的第<span
+class="math inline">\(i\)</span>行<span
+class="math inline">\(j\)</span>元素即为 <span
+class="math inline">\(K_{ij}=z_i^Tz_j=k(i,j)\)</span>.</p>
+<p>对于新的样本<span class="math inline">\(x\)</span>，其投影后的第<span
+class="math inline">\(j\)</span>维坐标为 <span class="math display">\[
+z_j = w^T_j \phi(x) = \sum\limits_{i=1}^m \alpha_i^j \phi(x_i)^T \phi(x)
+= \sum\limits_{i=1}^m \alpha_i^j k(i,j)
+\]</span></p>
+<p></font><br> <br><br></p>
+<p><font size=2 > <strong>参考链接：</strong><br>
+<a href="https://zhuanlan.zhihu.com/p/37777074">
+https://zhuanlan.zhihu.com/p/37777074 <br>
+<a href="https://datawhalechina.github.io/pumpkin-book/#/chapter10/chapter10?id=_1014">
+https://datawhalechina.github.io/pumpkin-book/#/chapter10/chapter10?id=_1014<br>
+<a href="https://blog.csdn.net/Junerror/article/details/80222540">
+https://blog.csdn.net/Junerror/article/details/80222540<br>
+<a href="https://zhuanlan.zhihu.com/p/59775730">
+https://zhuanlan.zhihu.com/p/59775730<br> </font></p>
+
+
+  </div>
+
+  <footer class="post-footer">
+<nav class="paginav">
+  <a class="prev" href="https://yupines.github.io/post/metric-learning/">
+    <span class="title">« Prev Page</span>
+    <br>
+    <span>Metric Learning</span>
+  </a>
+  <a class="next" href="https://yupines.github.io/post/vae/">
+    <span class="title">Next Page »</span>
+    <br>
+    <span>Variational Auto-Encoder</span>
+  </a>
+</nav>
+
+
+<div class="share-buttons">
+    <a target="_blank" rel="noopener noreferrer" aria-label="share Principle Component Analysis on twitter"
+        href="https://twitter.com/intent/tweet/?text=Principle%20Component%20Analysis&amp;url=https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f&amp;hashtags=">
+        <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve">
+            <path
+                d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-253.927,424.544c135.939,0 210.268,-112.643 210.268,-210.268c0,-3.218 0,-6.437 -0.153,-9.502c14.406,-10.421 26.973,-23.448 36.935,-38.314c-13.18,5.824 -27.433,9.809 -42.452,11.648c15.326,-9.196 26.973,-23.602 32.49,-40.92c-14.252,8.429 -30.038,14.56 -46.896,17.931c-13.487,-14.406 -32.644,-23.295 -53.946,-23.295c-40.767,0 -73.87,33.104 -73.87,73.87c0,5.824 0.613,11.494 1.992,16.858c-61.456,-3.065 -115.862,-32.49 -152.337,-77.241c-6.284,10.881 -9.962,23.601 -9.962,37.088c0,25.594 13.027,48.276 32.95,61.456c-12.107,-0.307 -23.448,-3.678 -33.41,-9.196l0,0.92c0,35.862 25.441,65.594 59.311,72.49c-6.13,1.686 -12.72,2.606 -19.464,2.606c-4.751,0 -9.348,-0.46 -13.946,-1.38c9.349,29.426 36.628,50.728 68.965,51.341c-25.287,19.771 -57.164,31.571 -91.8,31.571c-5.977,0 -11.801,-0.306 -17.625,-1.073c32.337,21.15 71.264,33.41 112.95,33.41Z" />
+        </svg>
+    </a>
+    <a target="_blank" rel="noopener noreferrer" aria-label="share Principle Component Analysis on linkedin"
+        href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f&amp;title=Principle%20Component%20Analysis&amp;summary=Principle%20Component%20Analysis&amp;source=https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f">
+        <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve">
+            <path
+                d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-288.985,423.278l0,-225.717l-75.04,0l0,225.717l75.04,0Zm270.539,0l0,-129.439c0,-69.333 -37.018,-101.586 -86.381,-101.586c-39.804,0 -57.634,21.891 -67.617,37.266l0,-31.958l-75.021,0c0.995,21.181 0,225.717 0,225.717l75.02,0l0,-126.056c0,-6.748 0.486,-13.492 2.474,-18.315c5.414,-13.475 17.767,-27.434 38.494,-27.434c27.135,0 38.007,20.707 38.007,51.037l0,120.768l75.024,0Zm-307.552,-334.556c-25.674,0 -42.448,16.879 -42.448,39.002c0,21.658 16.264,39.002 41.455,39.002l0.484,0c26.165,0 42.452,-17.344 42.452,-39.002c-0.485,-22.092 -16.241,-38.954 -41.943,-39.002Z" />
+        </svg>
+    </a>
+    <a target="_blank" rel="noopener noreferrer" aria-label="share Principle Component Analysis on reddit"
+        href="https://reddit.com/submit?url=https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f&title=Principle%20Component%20Analysis">
+        <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve">
+            <path
+                d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-3.446,265.638c0,-22.964 -18.616,-41.58 -41.58,-41.58c-11.211,0 -21.361,4.457 -28.841,11.666c-28.424,-20.508 -67.586,-33.757 -111.204,-35.278l18.941,-89.121l61.884,13.157c0.756,15.734 13.642,28.29 29.56,28.29c16.407,0 29.706,-13.299 29.706,-29.701c0,-16.403 -13.299,-29.702 -29.706,-29.702c-11.666,0 -21.657,6.792 -26.515,16.578l-69.105,-14.69c-1.922,-0.418 -3.939,-0.042 -5.585,1.036c-1.658,1.073 -2.811,2.761 -3.224,4.686l-21.152,99.438c-44.258,1.228 -84.046,14.494 -112.837,35.232c-7.468,-7.164 -17.589,-11.591 -28.757,-11.591c-22.965,0 -41.585,18.616 -41.585,41.58c0,16.896 10.095,31.41 24.568,37.918c-0.639,4.135 -0.99,8.328 -0.99,12.576c0,63.977 74.469,115.836 166.33,115.836c91.861,0 166.334,-51.859 166.334,-115.836c0,-4.218 -0.347,-8.387 -0.977,-12.493c14.564,-6.47 24.735,-21.034 24.735,-38.001Zm-119.474,108.193c-20.27,20.241 -59.115,21.816 -70.534,21.816c-11.428,0 -50.277,-1.575 -70.522,-21.82c-3.007,-3.008 -3.007,-7.882 0,-10.889c3.003,-2.999 7.882,-3.003 10.885,0c12.777,12.781 40.11,17.317 59.637,17.317c19.522,0 46.86,-4.536 59.657,-17.321c3.016,-2.999 7.886,-2.995 10.885,0.008c3.008,3.011 3.003,7.882 -0.008,10.889Zm-5.23,-48.781c-16.373,0 -29.701,-13.324 -29.701,-29.698c0,-16.381 13.328,-29.714 29.701,-29.714c16.378,0 29.706,13.333 29.706,29.714c0,16.374 -13.328,29.698 -29.706,29.698Zm-160.386,-29.702c0,-16.381 13.328,-29.71 29.714,-29.71c16.369,0 29.689,13.329 29.689,29.71c0,16.373 -13.32,29.693 -29.689,29.693c-16.386,0 -29.714,-13.32 -29.714,-29.693Z" />
+        </svg>
+    </a>
+    <a target="_blank" rel="noopener noreferrer" aria-label="share Principle Component Analysis on facebook"
+        href="https://facebook.com/sharer/sharer.php?u=https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f">
+        <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve">
+            <path
+                d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-106.468,0l0,-192.915l66.6,0l12.672,-82.621l-79.272,0l0,-53.617c0,-22.603 11.073,-44.636 46.58,-44.636l36.042,0l0,-70.34c0,0 -32.71,-5.582 -63.982,-5.582c-65.288,0 -107.96,39.569 -107.96,111.204l0,62.971l-72.573,0l0,82.621l72.573,0l0,192.915l-191.104,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Z" />
+        </svg>
+    </a>
+    <a target="_blank" rel="noopener noreferrer" aria-label="share Principle Component Analysis on whatsapp"
+        href="https://api.whatsapp.com/send?text=Principle%20Component%20Analysis%20-%20https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f">
+        <svg version="1.1" viewBox="0 0 512 512" xml:space="preserve">
+            <path
+                d="M449.446,0c34.525,0 62.554,28.03 62.554,62.554l0,386.892c0,34.524 -28.03,62.554 -62.554,62.554l-386.892,0c-34.524,0 -62.554,-28.03 -62.554,-62.554l0,-386.892c0,-34.524 28.029,-62.554 62.554,-62.554l386.892,0Zm-58.673,127.703c-33.842,-33.881 -78.847,-52.548 -126.798,-52.568c-98.799,0 -179.21,80.405 -179.249,179.234c-0.013,31.593 8.241,62.428 23.927,89.612l-25.429,92.884l95.021,-24.925c26.181,14.28 55.659,21.807 85.658,21.816l0.074,0c98.789,0 179.206,-80.413 179.247,-179.243c0.018,-47.895 -18.61,-92.93 -52.451,-126.81Zm-126.797,275.782l-0.06,0c-26.734,-0.01 -52.954,-7.193 -75.828,-20.767l-5.441,-3.229l-56.386,14.792l15.05,-54.977l-3.542,-5.637c-14.913,-23.72 -22.791,-51.136 -22.779,-79.287c0.033,-82.142 66.867,-148.971 149.046,-148.971c39.793,0.014 77.199,15.531 105.329,43.692c28.128,28.16 43.609,65.592 43.594,105.4c-0.034,82.149 -66.866,148.983 -148.983,148.984Zm81.721,-111.581c-4.479,-2.242 -26.499,-13.075 -30.604,-14.571c-4.105,-1.495 -7.091,-2.241 -10.077,2.241c-2.986,4.483 -11.569,14.572 -14.182,17.562c-2.612,2.988 -5.225,3.364 -9.703,1.12c-4.479,-2.241 -18.91,-6.97 -36.017,-22.23c-13.314,-11.876 -22.304,-26.542 -24.916,-31.026c-2.612,-4.484 -0.279,-6.908 1.963,-9.14c2.016,-2.007 4.48,-5.232 6.719,-7.847c2.24,-2.615 2.986,-4.484 4.479,-7.472c1.493,-2.99 0.747,-5.604 -0.374,-7.846c-1.119,-2.241 -10.077,-24.288 -13.809,-33.256c-3.635,-8.733 -7.327,-7.55 -10.077,-7.688c-2.609,-0.13 -5.598,-0.158 -8.583,-0.158c-2.986,0 -7.839,1.121 -11.944,5.604c-4.105,4.484 -15.675,15.32 -15.675,37.364c0,22.046 16.048,43.342 18.287,46.332c2.24,2.99 31.582,48.227 76.511,67.627c10.685,4.615 19.028,7.371 25.533,9.434c10.728,3.41 20.492,2.929 28.209,1.775c8.605,-1.285 26.499,-10.833 30.231,-21.295c3.732,-10.464 3.732,-19.431 2.612,-21.298c-1.119,-1.869 -4.105,-2.99 -8.583,-5.232Z" />
+        </svg>
+    </a>
+    <a target="_blank" rel="noopener noreferrer" aria-label="share Principle Component Analysis on telegram"
+        href="https://telegram.me/share/url?text=Principle%20Component%20Analysis&amp;url=https%3a%2f%2fyupines.github.io%2fpost%2fpca-svd%2f">
+        <svg version="1.1" xml:space="preserve" viewBox="2 2 28 28">
+            <path
+                d="M26.49,29.86H5.5a3.37,3.37,0,0,1-2.47-1,3.35,3.35,0,0,1-1-2.47V5.48A3.36,3.36,0,0,1,3,3,3.37,3.37,0,0,1,5.5,2h21A3.38,3.38,0,0,1,29,3a3.36,3.36,0,0,1,1,2.46V26.37a3.35,3.35,0,0,1-1,2.47A3.38,3.38,0,0,1,26.49,29.86Zm-5.38-6.71a.79.79,0,0,0,.85-.66L24.73,9.24a.55.55,0,0,0-.18-.46.62.62,0,0,0-.41-.17q-.08,0-16.53,6.11a.59.59,0,0,0-.41.59.57.57,0,0,0,.43.52l4,1.24,1.61,4.83a.62.62,0,0,0,.63.43.56.56,0,0,0,.4-.17L16.54,20l4.09,3A.9.9,0,0,0,21.11,23.15ZM13.8,20.71l-1.21-4q8.72-5.55,8.78-5.55c.15,0,.23,0,.23.16a.18.18,0,0,1,0,.06s-2.51,2.3-7.52,6.8Z" />
+        </svg>
+    </a>
+</div>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+    <span>&copy; 2022 <a href="https://yupines.github.io/">yupines</a></span>
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://git.io/hugopapermod" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu')
+    if (menu) {
+        menu.scrollLeft = localStorage.getItem("menu-scroll-position");
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        if (document.body.className.includes("dark")) {
+            document.body.classList.remove('dark');
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            document.body.classList.add('dark');
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerText = 'copy';
+
+        function copyingDone() {
+            copybutton.innerText = 'copied!';
+            setTimeout(() => {
+                copybutton.innerText = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

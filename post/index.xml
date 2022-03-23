@@ -10,7 +10,62 @@
     </image>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 23 Feb 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://yupines.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 15 Mar 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://yupines.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Manifold Learning</title>
+      <link>https://yupines.github.io/post/manifold-learning/</link>
+      <pubDate>Tue, 15 Mar 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://yupines.github.io/post/manifold-learning/</guid>
+      <description>“流形”是指局部与欧式空间同胚的空间，在局部建立降维映射关系后再投影到全局.
+
+ 1.等度量映射（Isometric mapping, Isomap）  
+在局部空间内，基于欧式距离构建近邻连接图，在近邻图上获得任意两点间的距离后，采用MDS方法获得样本在地位空间的坐标。
+背景知识：
+多维尺度变换 (multidimensional scaling,MDS）
+给定\(n\)个对象之间的相似性或距离，在低维空间表示这些对象时，最大程度得保留对象间的接近程度。依据度量标准是否为欧式距离时，分为经典MDS和非经典MDS。
+Classical MDS 给定\(n\)维空间中的距离矩阵\(D (N\times N)\)，第\(i\)行\(j\)列表示对象\(i,j\)之间的距离，假设数据降维到\(Z\)维空间（假设中心化，因此行列和为0），要求对象在\(Z\)维空间中的距离与原始距离相近，于是有 \[d_{ij}^2=||z_i-z_j||=z_i^2+z_j^2-2z_i^Tz_j \] 依次求和得到 \[\sum\limits_{i=1}^n d_{ij}^2 = \sum\limits_{i=1}^n z_{i}^2 + N z_j^2 \] \[\sum\limits_{j=1}^n d_{ij}^2 = \sum\limits_{j=1}^n z_{j}^2 + N z_i^2 \] \[\sum\limits_{i=1}^n\sum\limits_{j=1}^n d_{ij}^2 = \sum\limits_{i=1}^n \sum\limits_{j=1}^n z_j^2 + N\sum\limits_{i=1}^n z_i^2 = 2N\sum\limits_{i=1}^n z_i^2 \] 定义内积矩阵\(B=Z^TZ\)，整合上述等式得到 \[ b_{ij} = -\frac{1}{2}(\frac{1}{N^2}\sum\limits_{i=1}^n \sum\limits_{j=1}^n d_{ij}^2-\frac{1}{N}\sum\limits_{i=1}^nd_{ij^2}-\frac{1}{N}\sum\limits_{j=1}^nd_{ij^2}+d_{ij}^2) \] 因为\(B\)是对称矩阵，有\(B=V \Lambda V^T\)，降维之后的数据点坐标为\(Z=\Lambda^{1/2} V_* \in R^{d_*\times n}\). ISOmap Steps: 输入：样本集 \(D=\{d_1,d_2,\ldots,d_m\}\)</description>
+    </item>
+    
+    <item>
+      <title>Metric Learning</title>
+      <link>https://yupines.github.io/post/metric-learning/</link>
+      <pubDate>Fri, 11 Mar 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://yupines.github.io/post/metric-learning/</guid>
+      <description>在机器学习中，高维数据降维的目的主要是找到合适的距离度量。而度量学习的目的则是直接从原数据中学习出一个合适的距离度量。
+
+ （一）.背景知识  
+ 1.马氏距离（Mahalanobis Distance）  
+度量学习中常用的距离指标，可以应对高维线性分布的数据中各维度非独立的问题。此类方法一般应用马氏距离，其通过投影矩阵对源向量投影后再进行距离的度量，对两个\(d\)维样本\(x_i,x_j\)之间的马氏距离为
+\[ dist_{mah}(x_i,x_j) = \sqrt{(x_i - x_j)^T\Sigma^{-1}(x_i - x_j)} \] \(\Sigma\) 为协方差矩阵.
+从欧式距离出发，\(d\)维样本\(x_i,x_j\)之间的欧式距离为 \[ dist_{ed}^2(x_i,y_i) = ||x_i-x_j||^2 = dist_{i,j,1}^2 + dist_{i,j,2}^2 + \ldots + dist_{i,j,d}^2 \] 对每一维\(d\)引入权重\(w\)得到 \[\begin{aligned} dist_{wed}^2(x_i,y_i) &amp;amp;= w_1·dist_{i,j,1}^2 + w_2·dist_{i,j,2}^2 + \ldots + w_d·dist_{i,j,d}^2 \\ &amp;amp;= (x_i-x_j)^TM(x_i-x_j) \end{aligned}\] 其中\(w \geq 0,W=diag(w)，W\)是一个对角矩阵.
+将\(W\)换成半正定对称矩阵\(M\)，即得到马氏距离. \[ dist_{Mah} = ||x_i-x_j||^2_M \] \(M\)即是度量矩阵，为使度量矩阵非负，\(M\)必须是（半）正定对称矩阵，满足\(M=PP^T\).
+马氏距离的几何意义:
+将变量按照主成分进行旋转，让维度间相互独立，然后进行标准化. 
+ 2.近邻分类器（neighbourhood Component Analysis, NCA）</description>
+    </item>
+    
+    <item>
+      <title>Principle Component Analysis</title>
+      <link>https://yupines.github.io/post/pca-svd/</link>
+      <pubDate>Fri, 25 Feb 2022 00:00:00 +0000</pubDate>
+      
+      <guid>https://yupines.github.io/post/pca-svd/</guid>
+      <description>PCA用于许多领域的数据分析中，考虑到各变量间存在一定相关性，将关系紧密的变量变成较少的综合指标来进行分析。即在原数据n维特征的基础上重构出全新的k维正交特征。第一个新坐标轴是原始数据中方差最大的方向，第二个新坐标轴是与第一个坐标轴正交的平面中使得方差最大的方向，以此类推，保留前K个特征维度。
+
+ 1.协方差矩阵  
+样本均值：\(\bar{x} = \frac{1}{n}\sum\limits_{i=1}^n\ x_i\)
+样本方差：\(S^2 = \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})^2\)
+样本\(X\)和\(Y\)的协方差：\(\begin{aligned} Cov(x,y) &amp;amp;= \mathbb{E}[(X-\mathbb{E}(X))(Y-\mathbb{E}(Y))] \\ &amp;amp;= \frac{1}{n-1}\sum\limits_{i=1}^n\ (x_i - \bar{x})(y_i - \bar{y}) \end{aligned}\) 协方差为0时，样本\(X\)和\(Y\)不具有线性相关性。
+n维\(X=X_{1,3…n}\) 的协方差矩阵为：\[C = \mathbb{E}[(X-\bar{X})(X-\bar{X})^T]]\] 性质：协方差矩阵是对称矩阵，且半正定矩阵，主对角线是各个维度的方差。
+类间散度矩阵（scatter matrix）定义为： \[S = \sum\limits_{k=1}^n\ (X_k - \bar{X_k})(X_k - \bar{X_k})^T \] 散度矩阵即是协方差矩阵 \(C*(n-1)\) 
+ 2.矩阵特征值和特征向量  
+ 特征值与特征向量：
+\(A\)是\(n\)阶矩阵，若\(Av=\lambda v\)，则\(v\)是矩阵\(A\)的特征向量，\(\lambda\)是特征向量，系数行列式\(|\lambda E-A|\)称为A的特征多项式，\(E\)为单位矩阵。
+\[\begin{aligned} &amp;amp; Av=\lambda v\quad\Rightarrow\quad (\lambda E -A)v=0 \quad\Rightarrow\quad \\ &amp;amp; |\lambda E -A|= \begin{vmatrix} \lambda-a_{11} &amp;amp; -a_{12} &amp;amp; \ldots &amp;amp; -a_{1n} \\ -a_{11} &amp;amp; \lambda-a_{22} &amp;amp; \ldots &amp;amp; -a_{2n} \\ \ldots &amp;amp; \ldots &amp;amp; \ldots \\ -a_{m1} &amp;amp; -a_{m2} &amp;amp; \ldots &amp;amp; \lambda-a_{mn} \end{vmatrix} =0 \end{aligned}\] 计算\(|\lambda E -A|=0\)的行列式。 特征值分解： \[A=Q\Sigma Q^{-1} \] 其中，Q是矩阵A的特征向量组成的矩阵，描述方向变换，\(\Sigma\)为对角阵，对角线上的元素是特征值，由大到小排列，描述伸缩变换。</description>
+    </item>
+    
     <item>
       <title>Variational Auto-Encoder</title>
       <link>https://yupines.github.io/post/vae/</link>
